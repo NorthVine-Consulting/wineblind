@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Blind Tasting Trainer</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1a1410;
+    --parchment: #f5f0e8;
+    --cream: #ede7d9;
+    --muted: #8a7f70;
+    --white-wine: #c8a84b;
+    --white-wine-light: #f0e4b8;
+    --red-wine: #8b2333;
+    --red-wine-light: #f5d5d8;
+    --accent: #c8a84b;
+    --border: rgba(26,20,16,0.15);
+    --tag-bg: rgba(26,20,16,0.07);
+    --selected-white: #c8a84b;
+    --selected-red: #8b2333;
+    --glass-shadow: 0 8px 40px rgba(26,20,16,0.18);
+  }
+
+  html, body {
+    height: 100%;
+    background: #f5f0e8;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(200,168,75,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(139,35,51,0.06) 0%, transparent 50%);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+  }
+
+  .grain {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 128px;
+  }
+
+  .page {
+    position: relative; z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 3rem 2rem 4rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .wordmark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.4rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
+    color: var(--ink);
+    line-height: 1;
+  }
+  .wordmark em { font-style: italic; font-weight: 400; }
+
+  .tagline {
+    margin-top: 0.5rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* NAV */
+  .site-nav {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    background: white;
+  }
+  .nav-tab {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: all 0.15s;
+    border-right: 1px solid var(--border);
+  }
+  .nav-tab:last-child { border-right: none; }
+  .nav-tab:hover { background: var(--tag-bg); color: var(--ink); }
+  .nav-tab.active { background: var(--ink); color: var(--parchment); }
+
+  /* PAGE SECTIONS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* REFERENCE PAGE */
+  .ref-controls {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    align-items: center;
+  }
+  .ref-filter-btn {
+    padding: 0.35rem 0.9rem;
+    border: 1px solid var(--border);
+    background: white;
+    border-radius: 100px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .ref-filter-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .ref-filter-btn.active-all { background: var(--ink); color: var(--parchment); border-color: var(--ink); }
+  .ref-filter-btn.active-white { background: var(--white-wine); color: #1a1410; border-color: var(--white-wine); }
+  .ref-filter-btn.active-red   { background: var(--red-wine);   color: white;   border-color: var(--red-wine); }
+
+  .ref-search {
+    margin-left: auto;
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    background: white;
+    color: var(--ink);
+    outline: none;
+    width: 180px;
+    transition: border-color 0.15s;
+  }
+  .ref-search:focus { border-color: var(--ink); }
+  .ref-search::placeholder { color: var(--muted); }
+
+  .ref-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 1rem;
+  }
+
+  .ref-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+    animation: fadeUp 0.3s ease both;
+  }
+  .ref-card:hover { box-shadow: 0 4px 20px rgba(26,20,16,0.08); }
+  .ref-card.hidden { display: none; }
+
+  .ref-card-header {
+    padding: 0.85rem 1.1rem 0.7rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+  }
+  .ref-card.white-card { border-top: 2.5px solid var(--white-wine); }
+  .ref-card.red-card   { border-top: 2.5px solid var(--red-wine); }
+
+  .ref-grape-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+  .ref-grape-aka {
+    font-size: 0.62rem;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+  .ref-type-badge {
+    font-size: 0.58rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.55rem;
+    border-radius: 100px;
+    white-space: nowrap;
+    margin-top: 3px;
+  }
+  .badge-white { background: var(--white-wine-light); color: #7a5e1a; }
+  .badge-red   { background: var(--red-wine-light);   color: var(--red-wine); }
+
+  .ref-card-body { padding: 0.75rem 1.1rem 0.9rem; }
+
+  .ref-flavors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-bottom: 0.85rem;
+  }
+  .ref-flavor-pill {
+    font-size: 0.62rem;
+    padding: 0.18rem 0.55rem;
+    border-radius: 100px;
+    background: var(--tag-bg);
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+
+  .ref-regions { display: flex; flex-direction: column; }
+  .ref-region-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 0.5rem;
+    padding: 0.45rem 0;
+    border-top: 1px solid var(--border);
+    align-items: baseline;
+  }
+  .ref-region-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .ref-region-note {
+    font-size: 0.65rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .ref-section-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.45rem;
+  }
+
+  .ref-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+    color: var(--muted);
+  }
+
+  /* STEP STRUCTURE */
+  .step {
+    margin-bottom: 2.5rem;
+    animation: fadeUp 0.4s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.75rem;
+  }
+
+  /* COLOR SELECTOR */
+  .color-choice {
+    display: flex;
+    gap: 1rem;
+  }
+
+  .color-btn {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    border: 1.5px solid var(--border);
+    background: white;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .color-btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .color-btn.white::before { background: linear-gradient(135deg, rgba(200,168,75,0.08), transparent); }
+  .color-btn.red::before   { background: linear-gradient(135deg, rgba(139,35,51,0.08), transparent); }
+  .color-btn:hover { border-color: var(--ink); color: var(--ink); }
+  .color-btn:hover::before { opacity: 1; }
+
+  .color-btn.active.white {
+    border-color: var(--white-wine);
+    color: var(--white-wine);
+    background: var(--white-wine-light);
+  }
+  .color-btn.active.red {
+    border-color: var(--red-wine);
+    color: var(--red-wine);
+    background: var(--red-wine-light);
+  }
+
+  .wine-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .white .wine-dot { background: var(--white-wine); opacity: 0.4; }
+  .red .wine-dot   { background: var(--red-wine); opacity: 0.4; }
+  .active .wine-dot { opacity: 1; }
+
+  /* FLAVOR PICKER */
+  #flavor-step { display: none; }
+
+  .flavor-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .flavor-tag {
+    padding: 0.35rem 0.85rem;
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    cursor: pointer;
+    background: white;
+    color: var(--muted);
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .flavor-tag:hover { border-color: var(--ink); color: var(--ink); }
+  .flavor-tag.selected-white {
+    background: var(--white-wine-light);
+    border-color: var(--white-wine);
+    color: #7a5e1a;
+    font-weight: 500;
+  }
+  .flavor-tag.selected-red {
+    background: var(--red-wine-light);
+    border-color: var(--red-wine);
+    color: var(--red-wine);
+    font-weight: 500;
+  }
+
+  .flavor-hint {
+    margin-top: 0.75rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+  }
+
+  /* SELECTED FLAVORS DISPLAY */
+  .selected-bar {
+    min-height: 2.2rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+    margin-top: 0.75rem;
+  }
+  .selected-bar-label {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 0.25rem;
+  }
+
+  /* ANALYZE BUTTON */
+  .analyze-btn {
+    display: none;
+    margin-top: 1.5rem;
+    padding: 0.85rem 2.5rem;
+    background: var(--ink);
+    color: var(--parchment);
+    border: none;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .analyze-btn:hover { background: #2d2420; transform: translateY(-1px); }
+  .analyze-btn.white-active { background: var(--white-wine); color: #1a1410; }
+  .analyze-btn.red-active   { background: var(--red-wine);   color: white; }
+
+  /* RESULTS */
+  #results-section { display: none; margin-top: 2rem; }
+
+  .results-divider {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .results-divider::before,
+  .results-divider::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--border);
+  }
+  .results-divider span {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .result-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .result-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    animation: fadeUp 0.35s ease both;
+  }
+  .result-card:nth-child(1) { animation-delay: 0.05s; }
+  .result-card:nth-child(2) { animation-delay: 0.1s; }
+  .result-card:nth-child(3) { animation-delay: 0.15s; }
+  .result-card:nth-child(4) { animation-delay: 0.2s; }
+
+  .result-card-header {
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .result-card.match-strong .result-card-header { border-left: 3px solid var(--ink); }
+  .result-card.match-strong.white-result .result-card-header { border-left-color: var(--white-wine); }
+  .result-card.match-strong.red-result   .result-card-header { border-left-color: var(--red-wine); }
+
+  .result-grape-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-weight: 400;
+    color: var(--ink);
+  }
+  .result-grape-aka {
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    margin-top: 1px;
+  }
+
+  .match-score {
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 0.25rem 0.6rem;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+  .score-strong { background: var(--ink); color: var(--parchment); }
+  .score-strong.white-score { background: var(--white-wine); color: #1a1410; }
+  .score-strong.red-score   { background: var(--red-wine); color: white; }
+  .score-partial { background: var(--tag-bg); color: var(--muted); border: 1px solid var(--border); }
+
+  .result-card-body { padding: 0.85rem 1.25rem; }
+
+  .matched-flavors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.85rem;
+  }
+  .matched-flavor {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 100px;
+  }
+  .mf-hit-white  { background: var(--white-wine-light); color: #7a5e1a; border: 1px solid rgba(200,168,75,0.3); }
+  .mf-hit-red    { background: var(--red-wine-light);   color: var(--red-wine); border: 1px solid rgba(139,35,51,0.2); }
+  .mf-miss       { background: var(--tag-bg); color: var(--muted); border: 1px solid var(--border); opacity: 0.6; }
+
+  .regions-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+  .region-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 0.5rem 0;
+    border-top: 1px solid var(--border);
+  }
+  .region-row:first-child { border-top: none; }
+
+  .region-name-r {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    min-width: 130px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+  .region-note-r {
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .no-results {
+    text-align: center;
+    padding: 2.5rem;
+    color: var(--muted);
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.1rem;
+  }
+
+  .reset-btn {
+    margin-top: 2rem;
+    background: none;
+    border: 1px solid var(--border);
+    padding: 0.6rem 1.5rem;
+    border-radius: 3px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--ink); color: var(--ink); }
+
+  /* FOOTER */
+  footer {
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="page">
+
+  <header>
+    <div class="wordmark"><em>Blind</em> Tasting Trainer</div>
+    <div class="tagline">WSET Diploma · Grape &amp; Region Identification</div>
+  </header>
+
+  <!-- NAV -->
+  <nav class="site-nav">
+    <button class="nav-tab active" onclick="switchView('trainer', this)">Trainer</button>
+    <button class="nav-tab" onclick="switchView('reference', this)">Reference</button>
+  </nav>
+
+  <!-- TRAINER VIEW -->
+  <div class="view active" id="view-trainer">
+
+  <!-- STEP 1: COLOR -->
+  <div class="step" id="step-color">
+    <div class="step-label">Step 1 — What colour is the wine?</div>
+    <div class="color-choice">
+      <button class="color-btn white" onclick="selectColor('white')">
+        <span class="wine-dot"></span> White
+      </button>
+      <button class="color-btn red" onclick="selectColor('red')">
+        <span class="wine-dot"></span> Red
+      </button>
+    </div>
+  </div>
+
+  <!-- STEP 2: FLAVORS -->
+  <div class="step" id="flavor-step">
+    <div class="step-label">Step 2 — Which flavours are you picking up? (choose 2–5)</div>
+    <div class="flavor-grid" id="flavorGrid"></div>
+    <div class="selected-bar" id="selectedBar">
+      <span class="selected-bar-label">Selected:</span>
+      <span id="selectedList" style="font-size:0.65rem; color: var(--muted); font-style: italic;">none yet</span>
+    </div>
+    <p class="flavor-hint">Pick the flavours you actually detect — the trainer will score matches.</p>
+    <button class="analyze-btn" id="analyzeBtn" onclick="analyzeWine()">Identify →</button>
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results-section">
+    <div class="results-divider"><span>Possible matches</span></div>
+    <div class="result-cards" id="resultCards"></div>
+    <button class="reset-btn" onclick="resetAll()">← Start over</button>
+  </div>
+
+  </div><!-- end view-trainer -->
+
+  <!-- REFERENCE VIEW -->
+  <div class="view" id="view-reference">
+    <div class="ref-controls">
+      <button class="ref-filter-btn active-all" onclick="refFilter('all', this)">All</button>
+      <button class="ref-filter-btn" onclick="refFilter('white', this)">Whites</button>
+      <button class="ref-filter-btn" onclick="refFilter('red', this)">Reds</button>
+      <input class="ref-search" type="text" placeholder="Search grape or region…" oninput="refSearch(this.value)" id="refSearchInput">
+    </div>
+    <div class="ref-grid" id="refGrid"></div>
+  </div>
+
+  <footer>For study use only · WSET Diploma Level 4</footer>
+</div>
+
+<script>
+const GRAPES = [
+  {
+    name:"Chardonnay", type:"white", aka:"",
+    flavors:["green apple","lemon","pear","peach","butter","hazelnut","vanilla","tropical fruit","brioche","toast"],
+    regions:[
+      {name:"Chablis",note:"Lean, mineral, unoaked, high acid — steely and precise."},
+      {name:"Côte de Beaune",note:"Rich, creamy, nutty, integrated oak — the benchmark for texture."},
+      {name:"Napa Valley",note:"Ripe tropical fruit, heavy oak, lower acidity."},
+      {name:"Margaret River",note:"Grapefruit-forward, restrained oak, elegant."},
+      {name:"Marlborough NZ",note:"Crisp stone fruit, moderate oak, fresh finish."},
+    ]
+  },
+  {
+    name:"Sauvignon Blanc", type:"white", aka:"Fumé Blanc (CA)",
+    flavors:["gooseberry","cut grass","grapefruit","passion fruit","jalapeño","flint","elderflower","nettle","lime"],
+    regions:[
+      {name:"Sancerre / Pouilly-Fumé",note:"Mineral, flinty, restrained fruit — the reference point."},
+      {name:"Marlborough NZ",note:"Intense tropical aromas, capsicum, passion fruit bomb."},
+      {name:"Pessac-Léognan",note:"Oak-fermented, waxy, complex — ages beautifully."},
+      {name:"Casablanca, Chile",note:"Herbaceous, cool-climate precision, excellent value."},
+    ]
+  },
+  {
+    name:"Riesling", type:"white", aka:"",
+    flavors:["lime","green apple","white peach","petrol","slate","ginger","honey","apricot","beeswax"],
+    regions:[
+      {name:"Mosel, Germany",note:"Featherweight, piercing acidity, slate minerality."},
+      {name:"Rheingau, Germany",note:"Fuller body, more peach and structure."},
+      {name:"Alsace, France",note:"Bone-dry to off-dry, powerful, intense texture."},
+      {name:"Clare / Eden Valley, AU",note:"Lime-juice, bone-dry, develops petrol character quickly."},
+      {name:"Finger Lakes, NY",note:"High acid, mineral, often off-dry."},
+    ]
+  },
+  {
+    name:"Pinot Gris / Grigio", type:"white", aka:"Pinot Grigio (IT)",
+    flavors:["pear","peach","honey","white flowers","almond","smoke","ginger","quince"],
+    regions:[
+      {name:"Alsace, France",note:"Rich, smoky, full-bodied, often off-dry."},
+      {name:"Alto Adige, Italy",note:"Light, crisp, neutral — the everyday Grigio style."},
+      {name:"Friuli, Italy",note:"Textured, copper-hued, more serious."},
+      {name:"Oregon, USA",note:"Between Alsace and Italy — stone fruit, spice, good acid."},
+    ]
+  },
+  {
+    name:"Gewurztraminer", type:"white", aka:"",
+    flavors:["lychee","rose petal","ginger","mango","clove","turkish delight","white pepper","jasmine"],
+    regions:[
+      {name:"Alsace, France",note:"Benchmark — opulent, oily texture, very low acid."},
+      {name:"Alto Adige, Italy",note:"Lighter, more delicate, noticeably higher acid."},
+    ]
+  },
+  {
+    name:"Chenin Blanc", type:"white", aka:"Steen (SA)",
+    flavors:["quince","beeswax","wet wool","honey","green apple","ginger","dried apricot","lanolin"],
+    regions:[
+      {name:"Vouvray, Loire",note:"Ranges dry to lusciously sweet; waxy, honeyed character."},
+      {name:"Savennières",note:"Bone-dry, intensely mineral, ages for decades."},
+      {name:"Stellenbosch, South Africa",note:"Tropical, richer — Chenin's spiritual second homeland."},
+    ]
+  },
+  {
+    name:"Viognier", type:"white", aka:"",
+    flavors:["apricot","peach","blossom","violet","cream","musk","honeysuckle","tangerine"],
+    regions:[
+      {name:"Condrieu, Rhône",note:"Intensely perfumed, full-bodied, short ageing window."},
+      {name:"Languedoc",note:"More affordable, slightly less intense."},
+      {name:"California",note:"Riper, higher alcohol, tropical fruit forward."},
+    ]
+  },
+  {
+    name:"Muscat Blanc", type:"white", aka:"Moscato",
+    flavors:["orange blossom","grape","peach","rose","musk","lychee","mandarin"],
+    regions:[
+      {name:"Moscato d'Asti",note:"Light, frizzante, delicate sweetness."},
+      {name:"Beaumes-de-Venise",note:"Fortified, rich, golden, honeyed."},
+      {name:"Rutherglen, AU",note:"Intensely fortified — treacle-thick, raisined."},
+    ]
+  },
+  {
+    name:"Cabernet Sauvignon", type:"red", aka:"",
+    flavors:["blackcurrant","cedar","tobacco","graphite","mint","eucalyptus","dark chocolate","cassis","cigar box","bay leaf"],
+    regions:[
+      {name:"Médoc / Pauillac",note:"Structured, tannic, needs time — blended with Merlot."},
+      {name:"Napa Valley",note:"Riper, plush, higher alcohol, approachable younger."},
+      {name:"Coonawarra, AU",note:"Signature eucalyptus/mint note over blackcurrant core."},
+      {name:"Maipo Valley, Chile",note:"Good structure, minty, excellent value."},
+      {name:"Stellenbosch, SA",note:"Medium-weight, leafy, firm tannins."},
+    ]
+  },
+  {
+    name:"Merlot", type:"red", aka:"",
+    flavors:["plum","black cherry","chocolate","bay leaf","fruitcake","mocha","blackberry","tobacco","coffee"],
+    regions:[
+      {name:"Pomerol, Bordeaux",note:"Plush, velvety, iron minerality — Pétrus lives here."},
+      {name:"Saint-Émilion",note:"Richer, more structured, blended with Cab Franc."},
+      {name:"California",note:"Riper, jammy, sometimes lacking backbone."},
+      {name:"Colchagua, Chile",note:"Soft, fruit-forward, plummy crowd-pleaser."},
+    ]
+  },
+  {
+    name:"Cabernet Franc", type:"red", aka:"",
+    flavors:["red pepper","graphite","violet","raspberry","cassis","tobacco","herbs","leafy","pencil shavings"],
+    regions:[
+      {name:"Chinon / Bourgueil",note:"Light, herbaceous, pure red fruit, earthy."},
+      {name:"Saint-Émilion",note:"Supporting role in blends; adds perfume and freshness."},
+      {name:"Niagara, Canada",note:"Cool-climate elegance, bell pepper, fresh red fruit."},
+    ]
+  },
+  {
+    name:"Pinot Noir", type:"red", aka:"Spätburgunder (DE)",
+    flavors:["cherry","raspberry","earth","mushroom","rose","game","forest floor","sous bois","red plum","cola"],
+    regions:[
+      {name:"Côte de Nuits, Burgundy",note:"Silky, complex, earthy — the mother ship. Terrifyingly expensive."},
+      {name:"Willamette Valley, OR",note:"Earthy, medium-weight, more approachable than Burgundy."},
+      {name:"Central Otago, NZ",note:"Ripe cherry, vibrant, spicy finish."},
+      {name:"Mornington Peninsula, AU",note:"Savory, silky, cool-climate elegance."},
+    ]
+  },
+  {
+    name:"Syrah / Shiraz", type:"red", aka:"Shiraz (AU/ZA)",
+    flavors:["blackberry","black pepper","smoked meat","violet","olive","leather","bacon","graphite","dark chocolate","blueberry"],
+    regions:[
+      {name:"Northern Rhône (Hermitage)",note:"Savory, peppery, smoked meat — a spice rack in a glass."},
+      {name:"Barossa Valley",note:"Full-bodied, jammy, high alcohol, chocolate/vanilla."},
+      {name:"McLaren Vale",note:"Richer still, velvet tannins, dark fruit."},
+      {name:"Washington State",note:"Concentrated, peppery, structured."},
+    ]
+  },
+  {
+    name:"Grenache / Garnacha", type:"red", aka:"Cannonau (IT)",
+    flavors:["raspberry","red cherry","white pepper","herbs","leather","orange peel","garrigue","kirsch","dried flowers"],
+    regions:[
+      {name:"Châteauneuf-du-Pape",note:"Dominant in blends; warm, spiced, rich, high alcohol."},
+      {name:"Priorat, Spain",note:"Old-vine intensity, mineral, structured."},
+      {name:"Rioja, Spain",note:"Blended with Tempranillo; adds roundness and fruit."},
+    ]
+  },
+  {
+    name:"Tempranillo", type:"red", aka:"Tinto Fino, Tinta Roriz",
+    flavors:["leather","tobacco","cherry","plum","vanilla","dried fig","earth","strawberry","cedar","dill"],
+    regions:[
+      {name:"Rioja",note:"Oak-aged; vanilla and strawberry — Crianza to Gran Reserva spectrum."},
+      {name:"Ribera del Duero",note:"More powerful, darker fruit, cool-altitude character."},
+      {name:"Douro (Tinta Roriz)",note:"Robust, dark, important blending grape."},
+    ]
+  },
+  {
+    name:"Nebbiolo", type:"red", aka:"Spanna",
+    flavors:["rose","tar","cherry","leather","dried herbs","tobacco","truffle","anise","violets"],
+    regions:[
+      {name:"Barolo",note:"Tannic, austere, needs 10+ years minimum. Roses and tar."},
+      {name:"Barbaresco",note:"More approachable, feminine but still seriously structured."},
+    ]
+  },
+  {
+    name:"Sangiovese", type:"red", aka:"Brunello, Prugnolo",
+    flavors:["sour cherry","dried herbs","leather","tobacco","tomato leaf","iron","dried rose","balsamic","fig"],
+    regions:[
+      {name:"Chianti Classico",note:"Medium body, high acid, firm tannins — the pizza grape."},
+      {name:"Brunello di Montalcino",note:"Powerful, complex, long-lived."},
+    ]
+  },
+  {
+    name:"Malbec", type:"red", aka:"Côt (FR)",
+    flavors:["plum","dark cherry","violet","chocolate","leather","tobacco","blackberry","coffee","dried fruit"],
+    regions:[
+      {name:"Mendoza, Argentina",note:"Lush, ripe, velvety — the grape that escaped mediocrity in France."},
+      {name:"Cahors, France",note:"Tannic, rustic, earthy — the original 'Black Wine'."},
+      {name:"Salta (high-altitude)",note:"More structured, floral, darker fruit from altitude."},
+    ]
+  },
+  {
+    name:"Zinfandel / Primitivo", type:"red", aka:"Primitivo (IT)",
+    flavors:["blackberry jam","black pepper","dried fruit","leather","tobacco","baked spice","prune","fig"],
+    regions:[
+      {name:"Dry Creek Valley, CA",note:"Rich, jammy, high alcohol — a fruit bomb in formal wear."},
+      {name:"Puglia, Italy (Primitivo)",note:"Lower alcohol, rustic, earthy, dried fruit character."},
+    ]
+  },
+  {
+    name:"Mourvèdre / Monastrell", type:"red", aka:"Mataro (AU)",
+    flavors:["game","dark fruit","iron","thyme","garrigue","leather","smoked meat","dried herbs","pepper"],
+    regions:[
+      {name:"Bandol, Provence",note:"Meaty, savory, tannic, age-worthy — the benchmark."},
+      {name:"Jumilla / Yecla, Spain",note:"Hot-climate, ripe, dense, powerful."},
+      {name:"Barossa (Mataro)",note:"Old-vine intensity, dark fruit, structured."},
+    ]
+  },
+  {
+    name:"Gamay", type:"red", aka:"Gamay Noir",
+    flavors:["red cherry","raspberry","violet","banana","bubblegum","cranberry","fresh herbs","earthy","black pepper","strawberry"],
+    regions:[
+      {name:"Beaujolais Nouveau",note:"Carbonic maceration staple — banana and bubblegum, drink immediately."},
+      {name:"Beaujolais Villages / Crus",note:"More serious; Moulin-à-Vent and Morgon approach Pinot Noir in structure."},
+      {name:"Touraine, Loire",note:"Light, fresh, peppery — easy-drinking everyday style."},
+      {name:"Switzerland (Dôle blend)",note:"Blended with Pinot Noir; light, delicate, Alpine freshness."},
+    ]
+  },
+  {
+    name:"Torrontés", type:"white", aka:"Torrontés Riojano",
+    flavors:["rose petal","peach","apricot","orange blossom","lychee","grapefruit","white pepper","jasmine","elderflower"],
+    regions:[
+      {name:"Salta (Cafayate), Argentina",note:"High-altitude benchmark — intensely aromatic, bone-dry, surprisingly crisp acidity."},
+      {name:"La Rioja, Argentina",note:"Slightly lower altitude, fuller body, less acid tension."},
+      {name:"Mendoza, Argentina",note:"Warmer, riper style — floral but softer, lower acidity."},
+    ]
+  },
+];
+
+// Build flavor universe per color
+let selectedColor = null;
+let selectedFlavors = new Set();
+
+function getAllFlavors(color) {
+  const set = new Set();
+  GRAPES.filter(g => g.type === color).forEach(g => g.flavors.forEach(f => set.add(f)));
+  return Array.from(set).sort();
+}
+
+function selectColor(color) {
+  selectedColor = color;
+  selectedFlavors = new Set();
+
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.color-btn.${color}`).classList.add('active');
+
+  const step = document.getElementById('flavor-step');
+  step.style.display = 'block';
+  step.style.animation = 'none';
+  requestAnimationFrame(() => { step.style.animation = ''; });
+
+  buildFlavorGrid(color);
+  updateSelectedBar();
+  document.getElementById('analyzeBtn').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+}
+
+function buildFlavorGrid(color) {
+  const flavors = getAllFlavors(color);
+  const grid = document.getElementById('flavorGrid');
+  grid.innerHTML = '';
+  flavors.forEach(f => {
+    const tag = document.createElement('span');
+    tag.className = 'flavor-tag';
+    tag.textContent = f;
+    tag.dataset.flavor = f;
+    tag.onclick = () => toggleFlavor(f, tag);
+    grid.appendChild(tag);
+  });
+}
+
+function toggleFlavor(flavor, el) {
+  if (selectedFlavors.has(flavor)) {
+    selectedFlavors.delete(flavor);
+    el.classList.remove(`selected-${selectedColor}`);
+  } else {
+    selectedFlavors.add(flavor);
+    el.classList.add(`selected-${selectedColor}`);
+  }
+  updateSelectedBar();
+  const btn = document.getElementById('analyzeBtn');
+  btn.style.display = selectedFlavors.size >= 1 ? 'block' : 'none';
+  btn.className = `analyze-btn ${selectedColor}-active`;
+}
+
+function updateSelectedBar() {
+  const list = document.getElementById('selectedList');
+  if (selectedFlavors.size === 0) {
+    list.textContent = 'none yet';
+    list.style.color = 'var(--muted)';
+  } else {
+    list.textContent = Array.from(selectedFlavors).join(' · ');
+    list.style.color = selectedColor === 'white' ? '#7a5e1a' : 'var(--red-wine)';
+  }
+}
+
+function analyzeWine() {
+  const chosen = Array.from(selectedFlavors);
+  const candidates = GRAPES.filter(g => g.type === selectedColor);
+
+  const scored = candidates.map(grape => {
+    const hits = chosen.filter(f => grape.flavors.includes(f));
+    const score = hits.length / chosen.length;
+    return { grape, hits, score };
+  }).filter(r => r.hits.length > 0)
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 5);
+
+  const container = document.getElementById('resultCards');
+  container.innerHTML = '';
+
+  if (scored.length === 0) {
+    container.innerHTML = '<div class="no-results">No strong matches found — try adjusting your flavour selections.</div>';
+  } else {
+    scored.forEach(({ grape, hits, score }, i) => {
+      const isStrong = score >= 0.5;
+      const card = document.createElement('div');
+      card.className = `result-card ${isStrong ? 'match-strong' : ''} ${selectedColor}-result`;
+      card.style.animationDelay = `${i * 0.06}s`;
+
+      const allFlavors = grape.flavors.slice(0, 8);
+      const flavorPills = allFlavors.map(f => {
+        const isHit = hits.includes(f);
+        return `<span class="matched-flavor ${isHit ? `mf-hit-${selectedColor}` : 'mf-miss'}">${f}</span>`;
+      }).join('');
+
+      const regionRows = grape.regions.map(r =>
+        `<div class="region-row">
+          <div class="region-name-r">${r.name}</div>
+          <div class="region-note-r">${r.note}</div>
+        </div>`
+      ).join('');
+
+      const pct = Math.round(score * 100);
+      const scoreLabel = score >= 0.75 ? 'Strong match' : score >= 0.5 ? 'Good match' : 'Partial match';
+      const scoreClass = score >= 0.5 ? `score-strong ${selectedColor}-score` : 'score-partial';
+
+      card.innerHTML = `
+        <div class="result-card-header">
+          <div>
+            <div class="result-grape-name">${grape.name}</div>
+            ${grape.aka ? `<div class="result-grape-aka">${grape.aka}</div>` : ''}
+          </div>
+          <span class="match-score ${scoreClass}">${scoreLabel} · ${pct}%</span>
+        </div>
+        <div class="result-card-body">
+          <div class="matched-flavors">${flavorPills}</div>
+          <div class="regions-list">${regionRows}</div>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  }
+
+  const section = document.getElementById('results-section');
+  section.style.display = 'block';
+  section.style.animation = 'none';
+  requestAnimationFrame(() => { section.style.animation = ''; });
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function resetAll() {
+  selectedColor = null;
+  selectedFlavors = new Set();
+  document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('flavor-step').style.display = 'none';
+  document.getElementById('results-section').style.display = 'none';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ---- REFERENCE PAGE ----
+let refCurrentFilter = 'all';
+let refCurrentSearch = '';
+
+function buildRefGrid() {
+  const grid = document.getElementById('refGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const filtered = GRAPES.filter(g => {
+    const matchType = refCurrentFilter === 'all' || g.type === refCurrentFilter;
+    const q = refCurrentSearch.toLowerCase();
+    const matchSearch = !q ||
+      g.name.toLowerCase().includes(q) ||
+      g.aka.toLowerCase().includes(q) ||
+      g.flavors.some(f => f.includes(q)) ||
+      g.regions.some(r => r.name.toLowerCase().includes(q) || r.note.toLowerCase().includes(q));
+    return matchType && matchSearch;
+  });
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="ref-empty">No grapes match that search.</div>';
+    return;
+  }
+
+  filtered.forEach((g, i) => {
+    const card = document.createElement('div');
+    card.className = `ref-card ${g.type}-card`;
+    card.style.animationDelay = `${Math.min(i, 10) * 0.04}s`;
+
+    const flavorPills = g.flavors.map(f =>
+      `<span class="ref-flavor-pill">${f}</span>`
+    ).join('');
+
+    const regionRows = g.regions.map(r =>
+      `<div class="ref-region-row">
+        <div class="ref-region-name">${r.name}</div>
+        <div class="ref-region-note">${r.note}</div>
+      </div>`
+    ).join('');
+
+    card.innerHTML = `
+      <div class="ref-card-header">
+        <div>
+          <div class="ref-grape-name">${g.name}</div>
+          ${g.aka ? `<div class="ref-grape-aka">aka ${g.aka}</div>` : ''}
+        </div>
+        <span class="ref-type-badge badge-${g.type}">${g.type}</span>
+      </div>
+      <div class="ref-card-body">
+        <div class="ref-section-label">Flavour profile</div>
+        <div class="ref-flavors">${flavorPills}</div>
+        <div class="ref-section-label">Regional expressions</div>
+        <div class="ref-regions">${regionRows}</div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function refFilter(type, btn) {
+  refCurrentFilter = type;
+  document.querySelectorAll('.ref-filter-btn').forEach(b => {
+    b.classList.remove('active-all','active-white','active-red');
+  });
+  btn.classList.add(`active-${type}`);
+  buildRefGrid();
+}
+
+function refSearch(val) {
+  refCurrentSearch = val;
+  buildRefGrid();
+}
+
+// ---- NAV ----
+function switchView(view, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`view-${view}`).classList.add('active');
+  btn.classList.add('active');
+  if (view === 'reference') buildRefGrid();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

@@ -814,7 +814,9 @@ function categorizeFlavor(flavor) {
 
 function getAllFlavors(color) {
   const set = new Set();
-  GRAPES.filter(g => g.type === color).forEach(g => g.flavors.forEach(f => set.add(f)));
+  Object.values(FLAVOR_CATEGORIES).forEach(categoryFlavors => {
+    categoryFlavors.forEach(f => set.add(f));
+  });
   return Array.from(set).sort();
 }
 

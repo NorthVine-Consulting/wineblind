@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Blind Tasting Trainer</title>
+<link rel="icon" type="image/png" href="blindfold-favicon.png">
 
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
 <style>
@@ -58,6 +59,22 @@
     border-bottom: 1px solid var(--border);
   }
 
+  .header-link {
+    text-decoration: none;
+    color: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    transition: opacity 0.2s;
+  }
+  .header-link:hover { opacity: 0.7; }
+
+  .header-icon {
+    width: 36px;
+    height: 36px;
+    opacity: 0.85;
+  }
+
   .wordmark {
     font-family: 'Cormorant Garamond', serif;
     font-size: 2.4rem;
@@ -70,7 +87,7 @@
 
   .tagline {
     margin-top: 0.5rem;
-    font-size: 0.65rem;
+    font-size: 0.75rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--muted);
@@ -93,7 +110,7 @@
     border: none;
     cursor: pointer;
     font-family: 'DM Mono', monospace;
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--muted);
@@ -122,7 +139,7 @@
     background: white;
     border-radius: 100px;
     font-family: 'DM Mono', monospace;
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--muted);
@@ -140,7 +157,7 @@
     border: 1px solid var(--border);
     border-radius: 100px;
     font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     background: white;
     color: var(--ink);
     outline: none;
@@ -186,7 +203,7 @@
     line-height: 1.1;
   }
   .ref-grape-aka {
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     color: var(--muted);
     letter-spacing: 0.06em;
     margin-top: 2px;
@@ -212,7 +229,7 @@
     margin-bottom: 0.85rem;
   }
   .ref-flavor-pill {
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     padding: 0.18rem 0.55rem;
     border-radius: 100px;
     background: var(--tag-bg);
@@ -237,13 +254,13 @@
     line-height: 1.3;
   }
   .ref-region-note {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     color: var(--muted);
     line-height: 1.5;
   }
 
   .ref-section-label {
-    font-size: 0.58rem;
+    font-size: 0.7rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     color: var(--muted);
@@ -271,7 +288,7 @@
   }
 
   .step-label {
-    font-size: 0.6rem;
+    font-size: 0.75rem;
     letter-spacing: 0.25em;
     text-transform: uppercase;
     color: var(--muted);
@@ -345,16 +362,17 @@
   }
 
   .flavor-tag {
-    padding: 0.35rem 0.85rem;
+    padding: 0.45rem 1rem;
     border: 1px solid var(--border);
     border-radius: 100px;
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     letter-spacing: 0.08em;
     cursor: pointer;
     background: white;
     color: var(--muted);
     transition: all 0.15s;
     user-select: none;
+    line-height: 1.4;
   }
   .flavor-tag:hover { border-color: var(--ink); color: var(--ink); }
   .flavor-tag.selected-white {
@@ -372,9 +390,96 @@
 
   .flavor-hint {
     margin-top: 0.75rem;
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     letter-spacing: 0.1em;
     color: var(--muted);
+  }
+
+  /* ACCORDION STRUCTURE */
+  .flavor-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .category-section {
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: white;
+    overflow: hidden;
+    transition: box-shadow 0.15s;
+  }
+
+  .category-section.has-selection {
+    border-left: 3px solid currentColor;
+  }
+  .category-section.has-selection.white-selected {
+    border-left-color: var(--white-wine);
+  }
+  .category-section.has-selection.red-selected {
+    border-left-color: var(--red-wine);
+  }
+
+  .category-header {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.15s;
+    text-align: left;
+  }
+
+  .category-header:hover {
+    background: var(--tag-bg);
+  }
+
+  .category-name {
+    flex: 1;
+    font-weight: 500;
+  }
+
+  .category-count {
+    color: var(--muted);
+    font-size: 0.7rem;
+  }
+
+  .category-indicator {
+    font-size: 1rem;
+    color: var(--muted);
+    transition: transform 0.2s ease;
+    transform-origin: center;
+  }
+
+  .category-section.expanded .category-indicator {
+    transform: rotate(90deg);
+  }
+
+  .category-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+  }
+
+  .category-section.expanded .category-content {
+    max-height: 2000px;
+    transition: max-height 0.4s ease-in;
+  }
+
+  .flavor-tags {
+    padding: 0.5rem 1rem 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    border-top: 1px solid var(--border);
   }
 
   /* SELECTED FLAVORS DISPLAY */
@@ -389,7 +494,7 @@
     margin-top: 0.75rem;
   }
   .selected-bar-label {
-    font-size: 0.6rem;
+    font-size: 0.75rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--muted);
@@ -406,7 +511,7 @@
     border: none;
     border-radius: 3px;
     font-family: 'DM Mono', monospace;
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     letter-spacing: 0.2em;
     text-transform: uppercase;
     cursor: pointer;
@@ -475,14 +580,14 @@
     color: var(--ink);
   }
   .result-grape-aka {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     color: var(--muted);
     letter-spacing: 0.08em;
     margin-top: 1px;
   }
 
   .match-score {
-    font-size: 0.6rem;
+    font-size: 0.75rem;
     letter-spacing: 0.15em;
     text-transform: uppercase;
     padding: 0.25rem 0.6rem;
@@ -503,7 +608,7 @@
     margin-bottom: 0.85rem;
   }
   .matched-flavor {
-    font-size: 0.65rem;
+    font-size: 0.8rem;
     padding: 0.2rem 0.6rem;
     border-radius: 100px;
   }
@@ -531,7 +636,7 @@
     line-height: 1.3;
   }
   .region-note-r {
-    font-size: 0.68rem;
+    font-size: 0.8rem;
     color: var(--muted);
     line-height: 1.5;
     flex: 1;
@@ -553,7 +658,7 @@
     padding: 0.6rem 1.5rem;
     border-radius: 3px;
     font-family: 'DM Mono', monospace;
-    font-size: 0.62rem;
+    font-size: 0.75rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--muted);
@@ -567,11 +672,40 @@
     margin-top: 4rem;
     padding-top: 1.5rem;
     border-top: 1px solid var(--border);
-    font-size: 0.6rem;
+    font-size: 0.7rem;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--muted);
     text-align: center;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .footer-link {
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .footer-link:hover { color: var(--ink); }
+
+  .footer-icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.7;
+  }
+
+  .footer-copyright {
+    font-size: 0.65rem;
+    margin-top: 0.5rem;
   }
 </style>
 </head>
@@ -580,8 +714,11 @@
 <div class="page">
 
   <header>
+    <a href="http://battlesip.com/" target="_blank" rel="noopener noreferrer" class="header-link">
+      <img src="battlesip.png" alt="Blind Tasting Trainer" class="header-icon">
+    </a>
     <div class="wordmark"><em>Blind</em> Tasting Trainer</div>
-    <div class="tagline">WSET Diploma · Grape &amp; Region Identification</div>
+    <div class="tagline">By BattleSip: Grape &amp; Region Identification</div>
   </header>
 
   <!-- NAV -->
@@ -638,9 +775,26 @@
     <div class="ref-grid" id="refGrid"></div>
   </div>
 
-  <footer>For study use only · WSET Diploma Level 4</footer>
+  <footer>
+    <div class="footer-links">
+      <a href="https://mysipnotes.com/" target="_blank" rel="noopener noreferrer" class="footer-link">
+        <img src="blindfold-favicon.png" alt="" class="footer-icon">
+        My Sip Notes
+      </a>
+      <a href="https://battlesip.com/" target="_blank" rel="noopener noreferrer" class="footer-link">
+        <img src="battlesip.png" alt="" class="footer-icon">
+        BattleSip
+      </a>
+    </div>
+    <div class="footer-copyright">
+      © <span id="copyright-year"></span> NorthVine Consulting. All Rights Reserved.
+    </div>
+  </footer>
 </div>
 
+<script>
+document.getElementById('copyright-year').textContent = new Date().getFullYear();
+</script>
 <script>
 const GRAPES = [
   {
@@ -855,6 +1009,61 @@ const GRAPES = [
 let selectedColor = null;
 let selectedFlavors = new Set();
 
+function categorizeFlavor(flavor) {
+  const categories = {
+    'Fruit': [
+      'lemon', 'lime', 'grapefruit', 'mandarin',
+      'peach', 'apricot', 'white peach',
+      'tropical fruit', 'passion fruit', 'mango', 'lychee',
+      'green apple', 'pear', 'quince',
+      'cherry', 'red cherry', 'sour cherry', 'black cherry', 'raspberry',
+      'strawberry', 'cranberry', 'red plum', 'plum', 'dark cherry',
+      'blackberry', 'blackcurrant', 'cassis', 'blueberry',
+      'gooseberry', 'grape', 'banana', 'orange peel', 'kirsch',
+      'blackberry jam', 'dried fruit', 'dried apricot', 'dried fig',
+      'prune', 'fig', 'fruitcake', 'dark fruit', 'tangerine'
+    ],
+    'Floral': [
+      'rose', 'rose petal', 'dried rose', 'violet', 'violets', 'jasmine',
+      'white flowers', 'blossom', 'orange blossom', 'honeysuckle',
+      'elderflower', 'dried flowers'
+    ],
+    'Spice': [
+      'black pepper', 'white pepper',
+      'ginger', 'clove', 'anise', 'dill', 'baked spice', 'jalapeño'
+    ],
+    'Earth/Mineral': [
+      'earth', 'earthy', 'mushroom', 'forest floor', 'sous bois',
+      'graphite', 'slate', 'petrol', 'flint', 'iron',
+      'truffle', 'tar', 'crushed gravel', 'petrichor'
+    ],
+    'Nutty/Oak': [
+      'vanilla', 'toast', 'brioche', 'hazelnut', 'almond',
+      'butter', 'cream', 'mocha', 'coffee', 'chocolate',
+      'dark chocolate', 'cedar', 'cigar box', 'smoke',
+      'pencil shavings'
+    ],
+    'Herbal/Vegetal': [
+      'cut grass', 'herbs', 'fresh herbs', 'dried herbs',
+      'nettle', 'bay leaf', 'mint', 'eucalyptus',
+      'thyme', 'garrigue', 'tomato leaf', 'leafy', 'tobacco',
+      'green pepper', 'red pepper', 'dill'
+    ],
+    'Other': [
+      'honey', 'beeswax', 'turkish delight', 'musk', 'wet wool', 'lanolin',
+      'game', 'smoked meat', 'bacon', 'leather', 'olive', 'cola',
+      'bubblegum', 'balsamic', "cinnamon gum"
+    ]
+  };
+
+  for (const [category, flavors] of Object.entries(categories)) {
+    if (flavors.includes(flavor)) {
+      return category;
+    }
+  }
+  return 'Other';
+}
+
 function getAllFlavors(color) {
   const set = new Set();
   GRAPES.filter(g => g.type === color).forEach(g => g.flavors.forEach(f => set.add(f)));
@@ -874,22 +1083,107 @@ function selectColor(color) {
   requestAnimationFrame(() => { step.style.animation = ''; });
 
   buildFlavorGrid(color);
+  updateCategoryIndicators();
   updateSelectedBar();
   document.getElementById('analyzeBtn').style.display = 'none';
   document.getElementById('results-section').style.display = 'none';
 }
 
 function buildFlavorGrid(color) {
-  const flavors = getAllFlavors(color);
+  const allFlavors = getAllFlavors(color);
   const grid = document.getElementById('flavorGrid');
   grid.innerHTML = '';
-  flavors.forEach(f => {
-    const tag = document.createElement('span');
-    tag.className = 'flavor-tag';
-    tag.textContent = f;
-    tag.dataset.flavor = f;
-    tag.onclick = () => toggleFlavor(f, tag);
-    grid.appendChild(tag);
+
+  const categorized = {};
+  const categoryOrder = ['Fruit', 'Floral', 'Spice', 'Earth/Mineral', 'Herbal/Vegetal', 'Nutty/Oak', 'Other'];
+
+  allFlavors.forEach(flavor => {
+    const category = categorizeFlavor(flavor);
+    if (!categorized[category]) {
+      categorized[category] = [];
+    }
+    categorized[category].push(flavor);
+  });
+
+  const accordion = document.createElement('div');
+  accordion.className = 'flavor-accordion';
+
+  categoryOrder.forEach(category => {
+    const flavors = categorized[category];
+    if (!flavors || flavors.length === 0) {
+      return;
+    }
+
+    const section = document.createElement('div');
+    section.className = 'category-section';
+    section.dataset.category = category;
+
+    const header = document.createElement('button');
+    header.className = 'category-header';
+    header.setAttribute('aria-expanded', 'false');
+    header.innerHTML = `
+      <span class="category-name">${category}</span>
+      <span class="category-count">(${flavors.length})</span>
+      <span class="category-indicator">›</span>
+    `;
+    header.onclick = () => toggleCategory(section);
+
+    const content = document.createElement('div');
+    content.className = 'category-content';
+
+    const tagsContainer = document.createElement('div');
+    tagsContainer.className = 'flavor-tags';
+
+    flavors.forEach(f => {
+      const tag = document.createElement('span');
+      tag.className = 'flavor-tag';
+      tag.textContent = f;
+      tag.dataset.flavor = f;
+      tag.onclick = () => toggleFlavor(f, tag);
+
+      if (selectedFlavors.has(f)) {
+        tag.classList.add(`selected-${selectedColor}`);
+      }
+
+      tagsContainer.appendChild(tag);
+    });
+
+    content.appendChild(tagsContainer);
+    section.appendChild(header);
+    section.appendChild(content);
+    accordion.appendChild(section);
+  });
+
+  grid.appendChild(accordion);
+}
+
+function toggleCategory(section) {
+  const isExpanded = section.classList.contains('expanded');
+
+  if (isExpanded) {
+    section.classList.remove('expanded');
+    section.querySelector('.category-header').setAttribute('aria-expanded', 'false');
+  } else {
+    section.classList.add('expanded');
+    section.querySelector('.category-header').setAttribute('aria-expanded', 'true');
+  }
+}
+
+function updateCategoryIndicators() {
+  const sections = document.querySelectorAll('.category-section');
+
+  sections.forEach(section => {
+    const categoryFlavors = Array.from(
+      section.querySelectorAll('.flavor-tag')
+    ).map(tag => tag.dataset.flavor);
+
+    const hasSelection = categoryFlavors.some(f => selectedFlavors.has(f));
+
+    if (hasSelection) {
+      section.classList.add('has-selection', `${selectedColor}-selected`);
+    } else {
+      section.classList.remove('has-selection', 'white-selected', 'red-selected');
+    }
   });
 }
 
@@ -901,6 +1195,7 @@ function toggleFlavor(flavor, el) {
     selectedFlavors.add(flavor);
     el.classList.add(`selected-${selectedColor}`);
   }
+  updateCategoryIndicators();
   updateSelectedBar();
   const btn = document.getElementById('analyzeBtn');
   btn.style.display = selectedFlavors.size >= 1 ? 'block' : 'none';
